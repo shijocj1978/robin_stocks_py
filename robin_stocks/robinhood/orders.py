@@ -181,8 +181,12 @@ def find_stock_orders(**arguments):
             if key not in item:
                 print(error_argument_not_key_in_dictionary(key), file=get_output())
                 return([None])
-            if value != item[key]:
+            if value != item[key] and '||' not in value:
                 break
+            else:
+                values = value.split('||')
+                if(any(val == item[key] for val in values)== False):
+                    break
             if i == stop:
                 list_of_orders.append(item)
 
