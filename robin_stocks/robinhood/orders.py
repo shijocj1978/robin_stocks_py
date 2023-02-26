@@ -167,8 +167,10 @@ def find_stock_orders(**arguments):
         item['quantity'] = str(int(float(item['quantity'])))
 
     if 'symbol' in arguments.keys():
-        arguments['instrument'] = get_instruments_by_symbols(
-            arguments['symbol'], info='url')[0]
+        instrument = get_instruments_by_symbols(arguments['symbol'], info='url')
+        if(len(instrument) == 0):
+            raise ValueError("Invalid symbol: {}".format(arguments['symbol']))
+        arguments['instrument'] = instrument[0]
         del arguments['symbol']
 
     if 'quantity' in arguments.keys():
