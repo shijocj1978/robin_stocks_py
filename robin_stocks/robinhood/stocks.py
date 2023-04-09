@@ -209,20 +209,20 @@ def get_latest_price(inputSymbols, priceType=None, includeExtendedHours=True):
     symbols = inputs_to_set(inputSymbols)
     quote = get_quotes(symbols)
 
-    prices = []
+    prices = dict()
     for item in quote:
         if item:
             if priceType == 'ask_price':
-                prices.append(item['ask_price'])
+                prices[item['symbol']] = item['ask_price']
             elif priceType == 'bid_price':
-                prices.append(item['bid_price'])
+                prices[item['symbol']] = item['bid_price']
             else:
                 if priceType:
                     print('WARNING: priceType should be "ask_price" or "bid_price". You entered "{0}"'.format(priceType), file=get_output())
                 if item['last_extended_hours_trade_price'] is None or not includeExtendedHours:
-                    prices.append(item['last_trade_price'])
+                    prices[item['symbol']] = item['last_trade_price']
                 else:
-                    prices.append(item['last_extended_hours_trade_price'])
+                    prices[item['symbol']] = item['last_extended_hours_trade_price']
         else:
             prices.append(None)
     return(prices)
