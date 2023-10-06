@@ -3,6 +3,7 @@ import getpass
 import os
 import pickle
 import random
+import sys
 
 from robin_stocks.robinhood.helper import *
 from robin_stocks.robinhood.urls import *
@@ -88,11 +89,11 @@ def extract_auth_token(pickle_name=""):
             # Raises exception is response code is not 200.
             res.raise_for_status()
             return({'access_token': access_token, 'token_type': token_type,
-                    'expires_in': pickle_data['expiresIn'], 'scope': pickle_data['scope'], 'detail': 'logged in using authentication in {0}'.format(creds_file),
+                    'expires_in': pickle_data['expires_in'], 'scope': pickle_data['scope'], 'detail': 'logged in using authentication in {0}'.format(creds_file),
                     'backup_code': None, 'refresh_token': pickle_data['refresh_token'],'device_token': pickle_data['device_token']})
     except:
-        print(
-            "ERROR: There was an issue loading pickle file. Authentication may be expired - logging in normally.", file=get_output())
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        print("ERROR: There was an issue loading pickle file. Authentication may be expired - logging in normally. Exception type:" + str(exc_type) + ", Exception value:" + str(exc_value) + ", Exception traceback:" + str(exc_traceback), file=get_output())
         set_login_state(False)
         update_session('Authorization', None)
         return None
