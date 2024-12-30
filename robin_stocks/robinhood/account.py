@@ -407,6 +407,20 @@ def get_bank_transfers(direction=None, info=None):
     return(filter_data(data, info))
 
 @login_required
+def get_unified_transfers(info=None):
+    """Returns all transfers made for the account.
+
+    :param info: Will filter the results to get a specific value.
+    :type info: Optional[str]
+    :returns: Returns a list of dictionaries of key/value pairs for each transfer. If info parameter is provided, \
+    a list of strings is returned where the strings are the value of the key that matches info.
+
+    """
+    url = unifiedtransfers_url()
+    data = request_get(url, 'results')
+    return(filter_data(data, info))
+
+@login_required
 def get_card_transactions(cardType=None, info=None):
     """Returns all debit card transactions made on the account
 
@@ -440,6 +454,19 @@ def get_stock_loan_payments(info=None):
     data = request_get(url, 'pagination')
     return(filter_data(data, info))
 
+@login_required
+def get_interest_payments(info=None):
+    """Returns a list of interest payments.
+
+    :param info: Will filter the results to get a specific value.
+    :type info: Optional[str]
+    :returns: Returns a list of dictionaries of key/value pairs for each interest payment. If info parameter is provided, \
+    a list of strings is returned where the strings are the value of the key that matches info.
+
+    """
+    url = interest_url()
+    data = request_get(url, 'pagination')
+    return(filter_data(data, info))
 
 @login_required
 def get_margin_interest(info=None):
@@ -811,7 +838,7 @@ def build_holdings(with_dividends=False):
 
 
 @login_required
-def build_user_profile():
+def build_user_profile(account_number=None):
     """Builds a dictionary of important information regarding the user account.
 
     :returns: Returns a dictionary that has total equity, extended hours equity, cash, and divendend total.
@@ -819,16 +846,15 @@ def build_user_profile():
     """
     user = {}
 
-    portfolios_data = load_portfolio_profile()
-    accounts_data = load_account_profile()
+    portfolios_data = load_portfolio_profile(account_number=account_number)
+    accounts_data = load_account_profile(account_number=account_number)
 
     if portfolios_data:
         user['equity'] = portfolios_data['equity']
         user['extended_hours_equity'] = portfolios_data['extended_hours_equity']
 
     if accounts_data:
-        cash = "{0:.2f}".format(
-            float(accounts_data['cash']) + float(accounts_data['uncleared_deposits']))
+        cash = "{0:.2f}".format(float(accounts_data['portfolio_cash'])) # float(accounts_data['cash']) + uncleared_deposits 
         user['cash'] = cash
 
     user['dividend_total'] = get_total_dividends()

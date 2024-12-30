@@ -18,7 +18,7 @@ def account_profile_url(account_number=None):
     if account_number:
         return('https://api.robinhood.com/accounts/'+account_number)
     else:
-        return('https://api.robinhood.com/accounts/')
+        return('https://api.robinhood.com/accounts/?default_to_all_accounts=true')
 
 
 def basic_profile_url():
@@ -29,8 +29,11 @@ def investment_profile_url():
     return('https://api.robinhood.com/user/investment_profile/')
 
 
-def portfolio_profile_url():
-    return('https://api.robinhood.com/portfolios/')
+def portfolio_profile_url(account_number=None):
+    if account_number:
+        return('https://api.robinhood.com/portfolios/'+account_number)
+    else:
+        return('https://api.robinhood.com/portfolios/')
 
 
 def security_profile_url():
@@ -104,6 +107,9 @@ def banktransfers_url(direction=None):
 def cardtransactions_url():
    return('https://minerva.robinhood.com/history/transactions/')
 
+def unifiedtransfers_url():
+   return('https://bonfire.robinhood.com/paymenthub/unified_transfers/')
+
 def daytrades_url(account):
     return('https://api.robinhood.com/accounts/{0}/recent_day_trades/'.format(account))
 
@@ -147,8 +153,10 @@ def referral_url():
 
 
 def stockloan_url():
-    return('https://api.robinhood.com/stock_loan/payments/')
+    return('https://api.robinhood.com/accounts/stock_loan_payments/')
 
+def interest_url():
+    return('https://api.robinhood.com/accounts/sweeps/')
 
 def subscription_url():
     return('https://api.robinhood.com/subscription/subscription_fees/')
@@ -192,8 +200,11 @@ def market_category_url(category):
 # options
 
 
-def aggregate_url():
-    return('https://api.robinhood.com/options/aggregate_positions/')
+def aggregate_url(account_number):
+    if account_number:
+        return('https://api.robinhood.com/options/aggregate_positions/?account_numbers='+account_number)
+    else:
+        return('https://api.robinhood.com/options/aggregate_positions/')
 
 
 def chains_url(symbol):
@@ -211,14 +222,25 @@ def option_instruments_url(id=None):
         return('https://api.robinhood.com/options/instruments/')
 
 
-def option_orders_url(orderID=None, account_number=None):
+def option_orders_url(orderID=None, account_number=None, start_date=None):
     url = 'https://api.robinhood.com/options/orders/'
     if orderID:
         url += '{0}/'.format(orderID)
+    query_build = []
     if account_number:
-        url += ('?account_numbers='+account_number)
+        query_build.append(f"account_numbers={account_number}")
+    if start_date:
+        query_build.append(f"updated_at[gte]={start_date}")
+
+    if query_build:
+        for index, value in enumerate(query_build):
+            if index == 0:
+                url += "?" + value
+            else:
+                url += "&" + value
 
     return url
+
 
 
 def option_positions_url(account_number):
@@ -289,11 +311,22 @@ def option_cancel_url(id):
     return('https://api.robinhood.com/options/orders/{0}/cancel/'.format(id))
 
 
-def orders_url(orderID=None, account_number=None):
+def orders_url(orderID=None, account_number=None, start_date=None):
     url = 'https://api.robinhood.com/orders/'
     if orderID:
         url += '{0}/'.format(orderID)
+
+    query_build = []
     if account_number:
-        url += ('?account_numbers='+account_number)
+        query_build.append(f"account_numbers={account_number}")
+    if start_date:
+        query_build.append(f"updated_at[gte]={start_date}")
+
+    if query_build:
+        for index, value in enumerate(query_build):
+            if index == 0:
+                url += "?" + value
+            else:
+                url += "&" + value
 
     return url

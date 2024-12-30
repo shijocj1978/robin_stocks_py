@@ -8,31 +8,35 @@ from robin_stocks.robinhood.stocks import *
 from robin_stocks.robinhood.urls import *
 
 @login_required
-def get_all_stock_orders(info=None):
+def get_all_stock_orders(info=None, account_number=None, start_date=None):
     """Returns a list of all the orders that have been processed for the account.
 
     :param info: Will filter the results to get a specific value.
     :type info: Optional[str]
+    :param start_date: Sets the date of when to start returning orders, returns all orders up to current date and time.
+    :type date: Optional[str] format, should this be sent as a DT object? I believe it's safer to require it to be handed to the function as a string.
     :returns: Returns a list of dictionaries of key/value pairs for each order. If info parameter is provided, \
     a list of strings is returned where the strings are the value of the key that matches info.
 
     """
-    url = orders_url()
+    url = orders_url(account_number=account_number, start_date=start_date)
     data = request_get(url, 'pagination')
     return(filter_data(data, info))
 
 
 @login_required
-def get_all_option_orders(info=None):
+def get_all_option_orders(info=None, account_number=None, start_date=None):
     """Returns a list of all the option orders that have been processed for the account.
 
     :param info: Will filter the results to get a specific value.
     :type info: Optional[str]
+    :param start_date: Sets the date of when to start returning orders, returns all orders up to current date and time.
+    :type date: Optional[str] format, should this be sent as a DT object? I believe it's safer to require it to be handed to the function as a string.
     :returns: Returns a list of dictionaries of key/value pairs for each option order. If info parameter is provided, \
     a list of strings is returned where the strings are the value of the key that matches info.
 
     """
-    url = option_orders_url()
+    url = option_orders_url(account_number=account_number, start_date=start_date)
     data = request_get(url, 'pagination')
     return(filter_data(data, info))
 
@@ -248,13 +252,13 @@ def cancel_crypto_order(orderID):
 
 
 @login_required
-def cancel_all_stock_orders():
+def cancel_all_stock_orders(account_number=None):
     """Cancels all stock orders.
 
     :returns: The list of orders that were cancelled.
 
     """ 
-    url = orders_url()
+    url = orders_url(account_number=account_number)
     data = request_get(url, 'pagination')
 
     data = [item for item in data if item['cancel'] is not None]
@@ -267,13 +271,13 @@ def cancel_all_stock_orders():
 
 
 @login_required
-def cancel_all_option_orders():
+def cancel_all_option_orders(account_number=None):
     """Cancels all option orders.
 
     :returns: Returns the order information for the orders that were cancelled.
 
     """ 
-    url = option_orders_url()
+    url = option_orders_url(account_number=account_number)
     data = request_get(url, 'pagination')
 
     data = [item for item in data if item['cancel_url'] is not None]
@@ -326,7 +330,7 @@ def order_buy_market(symbol, quantity, account_number=None, timeInForce='gtc', e
     the price, and the quantity.
 
     """ 
-    return order(symbol, quantity, "buy", account_number, None, None, timeInForce, extendedHours, jsonify)
+    return order(symbol, quantity, "buy", None, None, account_number, timeInForce, extendedHours, jsonify)
 
 
 @login_required
@@ -352,7 +356,7 @@ def order_buy_fractional_by_quantity(symbol, quantity, account_number=None, time
     the price, and the quantity.
 
     """ 
-    return order(symbol, quantity, "buy", account_number, None, None, timeInForce, extendedHours, jsonify)
+    return order(symbol, quantity, "buy", None, None, account_number, timeInForce, extendedHours, jsonify)
 
 
 @login_required
@@ -386,7 +390,7 @@ def order_buy_fractional_by_price(symbol, amountInDollars, account_number=None, 
     price = next(iter(get_latest_price(symbol, 'ask_price', extendedHours)), 0.00)
     fractional_shares = 0 if (price == 0.00) else round_price(amountInDollars/float(price))
     
-    return order(symbol, fractional_shares, "buy", None, None, account_number,  timeInForce, extendedHours, jsonify, market_hours)
+    return order(symbol, fractional_shares, "buy", None, None, account_number, timeInForce, extendedHours, jsonify, market_hours)
 
 
 @login_required
@@ -413,7 +417,7 @@ def order_buy_limit(symbol, quantity, limitPrice, account_number=None, timeInFor
     the price, and the quantity.
 
     """ 
-    return order(symbol, quantity, "buy", account_number, limitPrice, None, timeInForce, extendedHours, jsonify)
+    return order(symbol, quantity, "buy", limitPrice, None, account_number, timeInForce, extendedHours, jsonify)
 
 
 @login_required
@@ -440,7 +444,7 @@ def order_buy_stop_loss(symbol, quantity, stopPrice, account_number=None, timeIn
     the price, and the quantity.
 
     """ 
-    return order(symbol, quantity, "buy", account_number, None, stopPrice, timeInForce, extendedHours, jsonify)
+    return order(symbol, quantity, "buy", None, stopPrice, account_number, timeInForce, extendedHours, jsonify)
 
 
 @login_required
@@ -469,7 +473,7 @@ def order_buy_stop_limit(symbol, quantity, limitPrice, stopPrice, account_number
     the price, and the quantity.
 
     """ 
-    return order(symbol, quantity, "buy", account_number, limitPrice, stopPrice, timeInForce, extendedHours, jsonify)
+    return order(symbol, quantity, "buy", limitPrice, stopPrice, account_number, timeInForce, extendedHours, jsonify)
 
 
 @login_required
@@ -499,7 +503,7 @@ def order_buy_trailing_stop(symbol, quantity, trailAmount, trailType='percentage
     such as the order id, the state of order (queued, confired, filled, failed, canceled, etc.), \
     the price, and the quantity.
     """
-    return order_trailing_stop(symbol, quantity, "buy", trailAmount, trailType, timeInForce, extendedHours, jsonify)
+    return order_trailing_stop(symbol, quantity, "buy", trailAmount, trailType, None, timeInForce, extendedHours, jsonify)
 
 
 @login_required
@@ -524,7 +528,7 @@ def order_sell_market(symbol, quantity, account_number=None, timeInForce='gtc', 
     the price, and the quantity.
 
     """ 
-    return order(symbol, quantity, "sell", account_number, None, None, timeInForce, extendedHours, jsonify)
+    return order(symbol, quantity, "sell", None, None, account_number, timeInForce, extendedHours, jsonify)
 
 
 @login_required
@@ -550,7 +554,7 @@ def order_sell_fractional_by_quantity(symbol, quantity, account_number=None, tim
     the price, and the quantity.
 
     """ 
-    return order(symbol, quantity, "sell", None, None, account_number,  timeInForce, extendedHours, jsonify, market_hours)
+    return order(symbol, quantity, "sell", None, None, account_number, timeInForce, extendedHours, jsonify, market_hours)
 
 
 @login_required
@@ -583,7 +587,7 @@ def order_sell_fractional_by_price(symbol, amountInDollars, account_number=None,
     price = next(iter(get_latest_price(symbol, 'bid_price', extendedHours)), 0.00)
     fractional_shares = 0 if (price == 0.00) else round_price(amountInDollars/float(price))
 
-    return order(symbol, fractional_shares, "sell", account_number, None, None, timeInForce, extendedHours, jsonify)
+    return order(symbol, fractional_shares, "sell", None, None, account_number, timeInForce, extendedHours, jsonify)
 
 
 @login_required
@@ -610,7 +614,7 @@ def order_sell_limit(symbol, quantity, limitPrice, account_number=None, timeInFo
     the price, and the quantity.
 
     """ 
-    return order(symbol, quantity, "sell", account_number, limitPrice, None, timeInForce, extendedHours, jsonify)
+    return order(symbol, quantity, "sell", limitPrice, None, account_number, timeInForce, extendedHours, jsonify)
 
 
 @login_required
@@ -637,7 +641,7 @@ def order_sell_stop_loss(symbol, quantity, stopPrice, account_number=None, timeI
     the price, and the quantity.
 
     """ 
-    return order(symbol, quantity, "sell", account_number, None, stopPrice, timeInForce, extendedHours, jsonify)
+    return order(symbol, quantity, "sell", None, stopPrice, account_number, timeInForce, extendedHours, jsonify)
 
 
 @login_required
@@ -666,7 +670,7 @@ def order_sell_stop_limit(symbol, quantity, limitPrice, stopPrice, account_numbe
     the price, and the quantity.
 
     """ 
-    return order(symbol, quantity, "sell", account_number, limitPrice, stopPrice, timeInForce, extendedHours, jsonify)
+    return order(symbol, quantity, "sell", limitPrice, stopPrice, account_number, timeInForce, extendedHours, jsonify)
 
 
 @login_required
@@ -696,7 +700,7 @@ def order_sell_trailing_stop(symbol, quantity, trailAmount, trailType='percentag
     such as the order id, the state of order (queued, confired, filled, failed, canceled, etc.), \
     the price, and the quantity.
     """
-    return order_trailing_stop(symbol, quantity, "sell", trailAmount, trailType, timeInForce, extendedHours, jsonify)
+    return order_trailing_stop(symbol, quantity, "sell", trailAmount, trailType, None, timeInForce, extendedHours, jsonify)
 
 
 @login_required
@@ -774,7 +778,7 @@ def order_trailing_stop(symbol, quantity, side, trailAmount, trailType='percenta
     else:
         payload['trailing_peg'] = {'type': 'percentage', 'percentage': str(percentage)}
 
-    url = orders_url()
+    url = orders_url(account_number=account_number)
     data = request_post(url, payload, json=True, jsonify_data=jsonify)
 
     return (data)
@@ -839,11 +843,16 @@ def order(symbol, quantity, side, limitPrice=None, stopPrice=None, account_numbe
         trigger = "stop"
     else:
         price = round_price(next(iter(get_latest_price(symbol, priceType, extendedHours)), 0.00))
+        
+    from datetime import datetime
     payload = {
         'account': load_account_profile(account_number=account_number, info='url'),
         'instrument': get_instruments_by_symbols(symbol, info='url')[0],
         'symbol': symbol,
         'price': price,
+        'ask_price': round_price(next(iter(get_latest_price(symbol, "ask_price", extendedHours)), 0.00)),
+        'bid_ask_timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'),
+        'bid_price': round_price(next(iter(get_latest_price(symbol, "bid_price", extendedHours)), 0.00)),
         'quantity': quantity,
         'ref_id': str(uuid4()),
         'type': orderType,
@@ -851,14 +860,16 @@ def order(symbol, quantity, side, limitPrice=None, stopPrice=None, account_numbe
         'time_in_force': timeInForce,
         'trigger': trigger,
         'side': side,
-        'market_hours': market_hours, # choices are ['regular_hours', 'all_day_hours']
+        'market_hours': market_hours, # choices are ['regular_hours', 'all_day_hours', 'extended_hours']
         'extended_hours': extendedHours,
         'order_form_version': 4
     }
     # adjust market orders
     if orderType == 'market':
-        del payload['stop_price']
-        del payload['extended_hours'] 
+        if trigger != "stop":
+            del payload['stop_price']
+        # if market_hours == 'regular_hours': 
+        #     del payload['extended_hours'] 
         
     if market_hours == 'regular_hours':
         if side == "buy":
@@ -867,12 +878,12 @@ def order(symbol, quantity, side, limitPrice=None, stopPrice=None, account_numbe
         # regular market sell
         elif orderType == 'market' and side == 'sell':
             del payload['price']   
-    elif market_hours == 'all_day_hours': 
+    elif market_hours in ('extended_hours', 'all_day_hours'):
         payload['type'] = 'limit' 
         payload['quantity']=int(payload['quantity']) # round to integer instead of fractional
         
-    url = orders_url()
-
+    url = orders_url(account_number=account_number)
+    # print(payload)
     data = request_post(url, payload, jsonify_data=jsonify)
 
     return(data)
@@ -907,7 +918,7 @@ def order_option_credit_spread(price, symbol, quantity, spread, timeInForce='gtc
     such as the order id, the state of order (queued, confired, filled, failed, canceled, etc.), \
     the price, and the quantity.
     """
-    return(order_option_spread("credit", price, symbol, quantity, spread, account_number, timeInForce, jsonify))
+    return(order_option_spread("credit", price, symbol, quantity, spread, timeInForce, account_number, jsonify))
 
 
 @login_required
@@ -939,7 +950,7 @@ def order_option_debit_spread(price, symbol, quantity, spread, timeInForce='gtc'
     such as the order id, the state of order (queued, confired, filled, failed, canceled, etc.), \
     the price, and the quantity.
     """
-    return(order_option_spread("debit", price, symbol, quantity, spread, account_number, timeInForce, jsonify))
+    return(order_option_spread("debit", price, symbol, quantity, spread, timeInForce, account_number, jsonify))
 
 
 @login_required
@@ -986,7 +997,7 @@ def order_option_spread(direction, price, symbol, quantity, spread, account_numb
                                         each['optionType'])
         legs.append({'position_effect': each['effect'],
                      'side': each['action'],
-                     'ratio_quantity': 1,
+                     'ratio_quantity': each['ratio_quantity'],
                      'option': option_instruments_url(optionID)})
 
     payload = {
@@ -1003,7 +1014,7 @@ def order_option_spread(direction, price, symbol, quantity, spread, account_numb
         'ref_id': str(uuid4()),
     }
 
-    url = option_orders_url()
+    url = option_orders_url(account_number=account_number)
     data = request_post(url, payload, json=True, jsonify_data=jsonify)
 
     return(data)
@@ -1066,7 +1077,8 @@ def order_buy_option_limit(positionEffect, creditOrDebit, price, symbol, quantit
         'ref_id': str(uuid4()),
     }
 
-    url = option_orders_url()
+    url = option_orders_url(account_number=account_number)
+    # print(payload)
     data = request_post(url, payload, json=True, jsonify_data=jsonify)
 
     return(data)
@@ -1132,7 +1144,7 @@ def order_buy_option_stop_limit(positionEffect, creditOrDebit, limitPrice, stopP
         'ref_id': str(uuid4()),
     }
 
-    url = option_orders_url()
+    url = option_orders_url(account_number=account_number)
     data = request_post(url, payload, json=True, jsonify_data=jsonify)
 
     return(data)
@@ -1197,7 +1209,7 @@ def order_sell_option_stop_limit(positionEffect, creditOrDebit, limitPrice, stop
         'ref_id': str(uuid4()),
     }
 
-    url = option_orders_url()
+    url = option_orders_url(account_number=account_number)
     data = request_post(url, payload, json=True, jsonify_data=jsonify)
 
     return(data)
@@ -1260,7 +1272,7 @@ def order_sell_option_limit(positionEffect, creditOrDebit, price, symbol, quanti
         'ref_id': str(uuid4()),
     }
 
-    url = option_orders_url()
+    url = option_orders_url(account_number=account_number)
     data = request_post(url, payload, json=True, jsonify_data=jsonify)
 
     return(data)
